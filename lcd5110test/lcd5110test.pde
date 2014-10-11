@@ -13,15 +13,13 @@ SCLK(DS1302 pin7) -> Arduino D7
 uint8_t CE_PIN   = 9;
 uint8_t IO_PIN   = 10;
 uint8_t SCLK_PIN = 11;
+uint8_t RELAY_PIN=12;
 /* 日期变量缓存 */
 char buf[50];
 char day[10];
-/* 串口数据缓存 */
-String comdata = "";
-int numdata[7] ={0}, j = 0, mark = 0;
 /* 创建 DS1302 对象 */
 DS1302 rtc(CE_PIN, IO_PIN, SCLK_PIN);
-
+Time clock;//set a clock
 void print_time()
 {
     /* 从 DS1302 获取当前时间 */
@@ -49,6 +47,17 @@ void print_time()
 void setup(){
   rtc.write_protect(false);
   rtc.halt(false);
+  /* Make a new time object to set the date and time */
+  /*   Tuesday, May 19, 2009 at 21:16:37.            */
+ // Time t(2009, 5, 19, 21, 16, 37, 3);
+ Time t(2014, 10,11,10,29,00, 7);
+  /* Set the time and date on the chip */
+  rtc.time(t);
+  
+//set the Clock at every Wednesday 9AM
+  clock.hr =  9;
+  clock.min = 0;
+  clock.sec = 0;
   
   lcd.init();
   lcd.setBacklight(true);
@@ -56,15 +65,19 @@ void setup(){
 }
 
 void loop(){
+  /* 从 DS1302 获取当前时间 */
+    Time now = rtc.time();
+    if(now.day%3==0 && now.hr==clock.hr && now.min==clock.min && now.sec==clock.sec )
+    {
+      digitalWrite(RELAY_PIN,HIGH);
+      Serial.println("START");
+    }
+    if(now.day%3==0 && now.hr==clock.hr && now.min==clock.min+4 && now.sec==clock.sec+30)//now.day==clock.day && 
+    {
+      digitalWrite(RELAY_PIN,LOW);
+      Serial.println("END");
+    }
   /* 打印当前时间 */
     print_time();
     delay(1000);
-//  if (Serial.available() > 0){
-//    lcd.clearScreenOrigin();
-//    while (Serial.available() > 0)
-//      lcd.sendChar(Serial.read());
-//  }
-//  else {
-//    delay(500); 
-//  }
 }
